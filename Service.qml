@@ -19,9 +19,9 @@ Item {
 
   readonly property string home: Quickshell.env("HOME") || ""
   readonly property string pluginId: manifest && manifest.id
-    ? String(manifest.id) : "nfvelten.vault"
+    ? String(manifest.id) : "harbefas.vault"
   readonly property string pluginDir: manifest && manifest.__sourceDir
-    ? String(manifest.__sourceDir) : home + "/.config/omarchy/plugins/nfvelten.vault"
+    ? String(manifest.__sourceDir) : home + "/.config/omarchy/plugins/harbefas.vault"
   property string vaultPath: ""
   property int recentCount: 40
   readonly property string resolvedVault: vaultPath !== "" ? vaultPath : home + "/amphora"
@@ -42,7 +42,7 @@ Item {
   // is found in either supported configuration format.
   readonly property string suggestedKey: "SUPER + ALT + V"
   readonly property string suggestedBind:
-    'o.bind("' + root.suggestedKey + '", "Vault quick view", "omarchy shell -q nfvelten.vault.widget toggle")'
+    'o.bind("' + root.suggestedKey + '", "Vault quick view", "omarchy shell -q harbefas.vault.widget toggle")'
   property bool keybindConfigured: false
   property int bindingsScanned: 0
   readonly property bool bindingsReady: root.bindingsScanned >= 2
@@ -50,7 +50,7 @@ Item {
   function noteBindings(text) {
     // The full panel binding is independent; only the widget binding disables
     // this widget-launcher suggestion.
-    if (String(text || "").indexOf("nfvelten.vault.widget") >= 0)
+    if (String(text || "").indexOf("harbefas.vault.widget") >= 0)
       root.keybindConfigured = true
     root.bindingsScanned += 1
   }

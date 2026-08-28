@@ -32,7 +32,7 @@ To open the compact widget from anywhere, add this optional binding to
 `~/.config/hypr/bindings.lua`:
 
 ```lua
-o.bind("SUPER + ALT + V", "Vault quick view", "omarchy shell -q nfvelten.vault.widget toggle")
+o.bind("SUPER + ALT + V", "Vault quick view", "omarchy shell -q harbefas.vault.widget toggle")
 ```
 
 Then reload the shell:
@@ -56,7 +56,7 @@ selected file only after the explicit save action.
 ## Removal
 
 ```bash
-omarchy plugin remove nfvelten.vault
+omarchy plugin remove harbefas.vault
 ```
 
 Removing the plugin does not delete or modify any Markdown files in the vault.

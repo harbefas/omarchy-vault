@@ -98,7 +98,7 @@ Item {
   }
 
   function requestClose() {
-    if (shell && typeof shell.hide === "function") shell.hide("nfvelten.vault")
+    if (shell && typeof shell.hide === "function") shell.hide("harbefas.vault")
     else close()
   }
 
@@ -420,11 +420,11 @@ Item {
   // ------------------------------------------------------------------- IPC
 
   IpcHandler {
-    target: "nfvelten.vault"
+    target: "harbefas.vault"
 
     function today(): void {
       if (root.shell && typeof root.shell.summon === "function")
-        root.shell.summon("nfvelten.vault", JSON.stringify({ today: true }))
+        root.shell.summon("harbefas.vault", JSON.stringify({ today: true }))
     }
   }
 

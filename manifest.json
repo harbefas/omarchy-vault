@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "nfvelten.vault",
+  "id": "harbefas.vault",
   "name": "Vault",
   "version": "0.2.1",
-  "author": "nfvelten",
+  "author": "harbefas",
   "license": "MIT",
   "description": "Browse, read, search, and edit Markdown notes from a local vault in a native window.",
   "kinds": [

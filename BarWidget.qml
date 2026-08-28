@@ -6,10 +6,10 @@ import "Vault.js" as Vault
 
 BarWidget {
   id: root
-  moduleName: "nfvelten.vault"
+  moduleName: "harbefas.vault"
 
   readonly property var vault: bar && bar.shell
-    ? bar.shell.serviceFor("nfvelten.vault") : null
+    ? bar.shell.serviceFor("harbefas.vault") : null
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color secondary: Util.alpha(foreground, 0.55)
   readonly property var popupNotes: vault ? vault.notes.slice(0, 12) : []
@@ -87,13 +87,13 @@ BarWidget {
     var encoded = JSON.stringify(next)
     if (typeof bar.shell.hide === "function"
         && typeof bar.shell.summon === "function") {
-      bar.shell.hide("nfvelten.vault")
+      bar.shell.hide("harbefas.vault")
       Qt.callLater(function() {
         if (root.bar && root.bar.shell)
-          root.bar.shell.summon("nfvelten.vault", encoded)
+          root.bar.shell.summon("harbefas.vault", encoded)
       })
     } else if (typeof bar.shell.summon === "function") {
-      bar.shell.summon("nfvelten.vault", encoded)
+      bar.shell.summon("harbefas.vault", encoded)
     }
   }
 
