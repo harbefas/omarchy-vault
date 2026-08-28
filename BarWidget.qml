@@ -333,8 +333,9 @@ BarWidget {
           anchors.leftMargin: Style.space(8)
           anchors.rightMargin: Style.space(8)
           anchors.verticalCenter: parent.verticalCenter
-          text: "Suggested shortcut: Super+Alt+V\n"
-            + root.vault.suggestedBind
+          text: root.vault
+            ? "Suggested shortcut: Super+Alt+V\n" + root.vault.suggestedBind
+            : ""
           textFormat: Text.PlainText
           color: root.foreground
           opacity: 0.8
