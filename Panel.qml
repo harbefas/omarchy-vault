@@ -133,6 +133,7 @@ Item {
     editing = false
     clearReader()
     noteFile.path = path
+    noteFile.reload()
     ensureListSelection()
   }
 

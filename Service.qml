@@ -27,6 +27,14 @@ Item {
   readonly property string resolvedVault: vaultPath.trim()
   readonly property bool vaultConfigured: vaultPath.trim() !== ""
 
+  onVaultPathChanged: {
+    index = []
+    recent = []
+    notes = []
+    recentMtimes = ({})
+    refresh()
+  }
+
   // Every note in the vault, used to resolve wikilinks by title. Cheap to
   // hold: the listing already walked the whole tree.
   property var index: []
