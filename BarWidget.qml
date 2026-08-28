@@ -242,11 +242,27 @@ BarWidget {
     bar: root.bar
     owner: root
     open: root.popupOpen
-    focusTarget: noteList
+    focusTarget: popupKeyCatcher
     contentWidth: fittedContentWidth(Style.space(360))
     contentHeight: fittedContentHeight(contentColumn.implicitHeight)
 
-      Column {
+    // Keep keyboard focus on a stable item. The list and search field can
+    // change focus during navigation, but this catcher remains the popup's
+    // fallback target whenever the surface opens.
+    Item {
+      id: popupKeyCatcher
+      anchors.fill: parent
+      focus: root.popupOpen
+      Keys.priority: Keys.BeforeItem
+      onActiveFocusChanged: if (!activeFocus) root.heldModifierFlags = 0
+      Keys.onPressed: function(event) { root.handlePopupKey(event) }
+      Keys.onReleased: function(event) {
+        root.noteHeldModifiers(event, false)
+        if (root.isHintModifierKey(event.key)) event.accepted = true
+      }
+    }
+
+    Column {
       id: contentColumn
       anchors.fill: parent
         spacing: Style.space(8)
@@ -254,7 +270,7 @@ BarWidget {
         VaultSetup {
           width: parent.width
           visible: !root.vaultConfigured
-          onSubmitted: root.saveVaultPath(path)
+          onSubmitted: function(path) { root.saveVaultPath(path) }
         }
 
       TextField {
