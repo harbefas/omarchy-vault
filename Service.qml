@@ -37,11 +37,41 @@ Item {
   property bool searchAgain: false
   property bool searching: false
 
+  // Offer an optional launcher shortcut without ever changing the user's
+  // Hyprland configuration. The suggestion disappears once a matching bind
+  // is found in either supported configuration format.
+  readonly property string suggestedKey: "SUPER + ALT + V"
+  readonly property string suggestedBind:
+    'o.bind("' + root.suggestedKey + '", "Vault quick view", "omarchy shell -q nfvelten.vault.widget toggle")'
+  property bool keybindConfigured: false
+  property int bindingsScanned: 0
+  readonly property bool bindingsReady: root.bindingsScanned >= 2
+
+  function noteBindings(text) {
+    if (String(text || "").indexOf("nfvelten.vault") >= 0)
+      root.keybindConfigured = true
+    root.bindingsScanned += 1
+  }
+
   function applySettings(s) {
     if (!s) return
     if (typeof s.vaultPath === "string" && s.vaultPath !== "") vaultPath = s.vaultPath
     var count = Number(s.recentCount)
     if (isFinite(count) && count > 0) recentCount = Math.round(count)
+  }
+
+  FileView {
+    path: home + "/.config/hypr/bindings.lua"
+    watchChanges: true
+    onLoaded: root.noteBindings(text())
+    onLoadFailed: root.bindingsScanned += 1
+  }
+
+  FileView {
+    path: home + "/.config/hypr/bindings.conf"
+    watchChanges: true
+    onLoaded: root.noteBindings(text())
+    onLoadFailed: root.bindingsScanned += 1
   }
 
   // ---------------------------------------------------------------- listing

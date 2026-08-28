@@ -19,6 +19,12 @@ BarWidget {
   property int popupIndex: 0
   property bool shortcutHintsActive: true
   property int heldModifierFlags: 0
+  property int popupOpens: 0
+  readonly property int tipOpenLimit: 3
+  readonly property bool showBindTip: root.vault
+    && root.vault.bindingsReady
+    && !root.vault.keybindConfigured
+    && root.popupOpens <= root.tipOpenLimit
 
   readonly property bool opened: popupOpen
   readonly property bool hintCtrlHeld: (heldModifierFlags & Qt.ControlModifier) !== 0
@@ -44,6 +50,7 @@ BarWidget {
     searchField.text = ""
     shortcutHintsActive = true
     popupOpen = true
+    popupOpens += 1
     ensurePopupSelection()
     Qt.callLater(function() { noteList.forceActiveFocus() })
   }
@@ -303,6 +310,30 @@ BarWidget {
         font.family: Style.font.family
         font.pixelSize: Style.font.bodySmall
         horizontalAlignment: Text.AlignHCenter
+      }
+
+      Rectangle {
+        width: parent.width
+        visible: root.showBindTip
+        height: visible ? bindTip.implicitHeight + Style.space(12) : 0
+        color: Util.alpha(root.foreground, 0.08)
+
+        Text {
+          id: bindTip
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.leftMargin: Style.space(8)
+          anchors.rightMargin: Style.space(8)
+          anchors.verticalCenter: parent.verticalCenter
+          text: "Suggested shortcut: Super+Alt+V\n"
+            + root.vault.suggestedBind
+          textFormat: Text.PlainText
+          color: root.foreground
+          opacity: 0.8
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+          wrapMode: Text.WordWrap
+        }
       }
 
       PanelSeparator { width: parent.width }

@@ -28,6 +28,19 @@ After installation, place the widget in the bar through Omarchy's plugin
 settings. The full panel can be opened from the widget or with the configured
 panel shortcut.
 
+To open the compact widget from anywhere, add this optional binding to
+`~/.config/hypr/bindings.lua`:
+
+```lua
+o.bind("SUPER + ALT + V", "Vault quick view", "omarchy shell -q nfvelten.vault.widget toggle")
+```
+
+Then reload the shell:
+
+```bash
+omarchy restart shell
+```
+
 ## Usage
 
 - Click a note or press `Enter` to open it.
