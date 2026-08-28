@@ -131,6 +131,12 @@ BarWidget {
     selectedLabel = noteLabel(selectedNote())
   }
 
+  function shortcutSuggestionText() {
+    var service = root.vault
+    if (!service || typeof service.suggestedBind !== "string") return ""
+    return "Suggested shortcut: Super+Alt+V\n" + service.suggestedBind
+  }
+
   function noteLabel(note) {
     if (!note) return ""
     return note.folder ? note.folder + "/" + note.title : note.title
@@ -333,9 +339,7 @@ BarWidget {
           anchors.leftMargin: Style.space(8)
           anchors.rightMargin: Style.space(8)
           anchors.verticalCenter: parent.verticalCenter
-          text: root.vault
-            ? "Suggested shortcut: Super+Alt+V\n" + root.vault.suggestedBind
-            : ""
+          text: root.shortcutSuggestionText()
           textFormat: Text.PlainText
           color: root.foreground
           opacity: 0.8
