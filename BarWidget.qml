@@ -23,7 +23,6 @@ BarWidget {
   readonly property int tipOpenLimit: 3
   readonly property bool showBindTip: root.vault
     && root.vault.bindingsReady
-    && !root.vault.keybindConfigured
     && root.popupOpens <= root.tipOpenLimit
 
   readonly property bool opened: popupOpen
@@ -134,7 +133,10 @@ BarWidget {
   function shortcutSuggestionText() {
     var service = root.vault
     if (!service || typeof service.suggestedBind !== "string") return ""
-    return "Suggested shortcut: Super+Alt+V\n" + service.suggestedBind
+    var heading = service.keybindConfigured
+      ? "Shortcut configured: Super+Alt+V"
+      : "Suggested shortcut: Super+Alt+V"
+    return heading + "\n" + service.suggestedBind
   }
 
   function noteLabel(note) {
