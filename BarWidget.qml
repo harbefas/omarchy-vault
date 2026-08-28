@@ -13,7 +13,7 @@ BarWidget {
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color secondary: Util.alpha(foreground, 0.55)
   readonly property var popupNotes: vault ? vault.notes.slice(0, 12) : []
-  readonly property string selectedLabel: noteLabel(selectedNote())
+  property string selectedLabel: ""
 
   property bool popupOpen: false
   property int popupIndex: 0
@@ -43,7 +43,11 @@ BarWidget {
   implicitHeight: button.implicitHeight
 
   onVaultChanged: if (vault) vault.applySettings(root.settings)
-  onPopupNotesChanged: root.ensurePopupSelection()
+  onPopupNotesChanged: {
+    root.ensurePopupSelection()
+    root.updateSelectedLabel()
+  }
+  onPopupIndexChanged: root.updateSelectedLabel()
 
   function openPopup() {
     if (vault) { vault.setQuery(""); vault.refresh() }
@@ -121,6 +125,10 @@ BarWidget {
   function selectedNote() {
     return popupIndex >= 0 && popupIndex < popupNotes.length
       ? popupNotes[popupIndex] : null
+  }
+
+  function updateSelectedLabel() {
+    selectedLabel = noteLabel(selectedNote())
   }
 
   function noteLabel(note) {
