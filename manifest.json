@@ -33,7 +33,7 @@
         "type": "string",
         "label": "Vault folder",
         "defaultValue": "",
-        "description": "Absolute path to the vault. Leave empty to use ~/amphora."
+        "description": "Absolute path to the vault. Leave empty to choose it on first use."
       },
       {
         "key": "recentCount",

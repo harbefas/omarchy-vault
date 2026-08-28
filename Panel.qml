@@ -14,7 +14,7 @@ Item {
   property var manifest: null
   property var service: null
   property bool opened: false
-  moduleName: "harbefas.vault"
+  property string moduleName: "harbefas.vault"
 
   property string currentPath: ""
   property string currentTitle: ""
