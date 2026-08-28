@@ -21,7 +21,7 @@ Item {
   readonly property string pluginId: manifest && manifest.id
     ? String(manifest.id) : "nfvelten.vault"
   readonly property string pluginDir: manifest && manifest.__sourceDir
-    ? String(manifest.__sourceDir) : ""
+    ? String(manifest.__sourceDir) : home + "/.config/omarchy/plugins/nfvelten.vault"
   property string vaultPath: ""
   property int recentCount: 40
   readonly property string resolvedVault: vaultPath !== "" ? vaultPath : home + "/amphora"

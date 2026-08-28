@@ -13,6 +13,7 @@ BarWidget {
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color secondary: Util.alpha(foreground, 0.55)
   readonly property var popupNotes: vault ? vault.notes.slice(0, 12) : []
+  readonly property string selectedLabel: noteLabel(selectedNote())
 
   property bool popupOpen: false
   property int popupIndex: 0
@@ -314,12 +315,7 @@ BarWidget {
           width: parent.width - navHintSlot.width - todayButton.width
             - fullButton.width - parent.spacing * 3
           anchors.verticalCenter: parent.verticalCenter
-          text: root.popupIndex >= 0 && root.popupIndex < root.popupNotes.length
-            ? (root.popupNotes[root.popupIndex].folder
-              ? root.popupNotes[root.popupIndex].folder + "/"
-              + root.popupNotes[root.popupIndex].title
-              : root.popupNotes[root.popupIndex].title)
-            : ""
+          text: root.selectedLabel
           textFormat: Text.PlainText
           color: root.secondary
           font.family: Style.font.family

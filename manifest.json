@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "nfvelten.vault",
   "name": "Vault",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "nfvelten",
   "license": "MIT",
   "description": "Browse, read, search, and edit Markdown notes from a local vault in a native window.",
