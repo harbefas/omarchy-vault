@@ -57,7 +57,7 @@ BarWidget {
     popupOpen = true
     popupOpens += 1
     ensurePopupSelection()
-    Qt.callLater(function() { noteList.forceActiveFocus() })
+    Qt.callLater(function() { popupKeyCatcher.forceActiveFocus() })
   }
 
   function open() {
@@ -150,6 +150,9 @@ BarWidget {
         && typeof root.bar.shell.updateEntryInline === "function")
       root.bar.shell.updateEntryInline(root.moduleName, entry)
     root.vault.refresh()
+    Qt.callLater(function() {
+      if (root.popupOpen) popupKeyCatcher.forceActiveFocus()
+    })
   }
 
   function noteLabel(note) {
