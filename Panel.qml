@@ -13,6 +13,7 @@ Item {
   property var shell: null
   property var manifest: null
   property var service: null
+  property var settings: ({})
   property bool opened: false
   property string moduleName: "harbefas.vault"
 
@@ -74,6 +75,8 @@ Item {
       || (typeof payload.path === "string" && payload.path !== "")
       || payload.today === true
     if (service) {
+      if (payload.settings && typeof payload.settings === "object")
+        settings = payload.settings
       service.applySettings(payload.settings)
       service.refresh()
     }
@@ -555,7 +558,7 @@ Item {
           anchors.centerIn: parent
           width: Math.min(parent.width - Style.space(48), Style.space(620))
           foreground: root.foreground
-          onSubmitted: root.saveVaultPath(path)
+          onSubmitted: function(path) { root.saveVaultPath(path) }
         }
       }
 
