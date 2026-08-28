@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+# Keep untrusted command output bounded before Quickshell's collector sees it.
+"$@" | /usr/bin/head -c 4194305

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "nfvelten.vault",
+  "name": "Vault",
+  "version": "0.2.0",
+  "author": "nfvelten",
+  "license": "MIT",
+  "description": "Browse, read, search, and edit Markdown notes from a local vault in a native window.",
+  "kinds": [
+    "service",
+    "bar-widget",
+    "panel"
+  ],
+  "activation": "on-demand",
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Vault",
+    "description": "Browse, read, search, and edit Markdown notes from a local vault in a native window.",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "left",
+    "defaults": {
+      "vaultPath": "",
+      "recentCount": 40
+    },
+    "schema": [
+      {
+        "key": "vaultPath",
+        "type": "string",
+        "label": "Vault folder",
+        "defaultValue": "",
+        "description": "Absolute path to the vault. Leave empty to use ~/amphora."
+      },
+      {
+        "key": "recentCount",
+        "type": "integer",
+        "label": "Recent notes to list",
+        "min": 5,
+        "max": 200,
+        "step": 5,
+        "defaultValue": 40
+      }
+    ]
+  }
+}
