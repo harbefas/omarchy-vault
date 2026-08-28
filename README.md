@@ -61,6 +61,16 @@ omarchy plugin remove nfvelten.vault
 
 Removing the plugin does not delete or modify any Markdown files in the vault.
 
+## Preview
+
+Compact widget:
+
+![Vault compact widget](preview-popup.png)
+
+Full Markdown panel:
+
+![Vault full panel](preview.png)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
