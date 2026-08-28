@@ -188,7 +188,6 @@ BarWidget {
     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter
         || (plain && text === "o")) openSelected()
     else if (plain && text === "p") openFull({})
-    else if (plain && text === "t") openFull({ today: true })
     else if (plain && (text === "/" || event.key === Qt.Key_Slash)) {
       searchField.forceActiveFocus()
       searchField.selectAll()
@@ -234,7 +233,7 @@ BarWidget {
     text: "󱓵"
     tooltipText: "Vault · Super+Alt+V"
     onPressed: function(buttonCode) {
-      if (buttonCode === Qt.RightButton) root.openFull({ today: true })
+      if (buttonCode === Qt.RightButton) root.openFull({})
       else root.toggle()
     }
   }
@@ -267,7 +266,6 @@ BarWidget {
         if (key === "q") root.closePopup()
         else if (key === "o") root.openSelected()
         else if (key === "p") root.openFull({})
-        else if (key === "t") root.openFull({ today: true })
         else if (key === "/") {
           searchField.forceActiveFocus()
           searchField.selectAll()
@@ -410,8 +408,8 @@ BarWidget {
         spacing: Style.space(6)
 
         Text {
-          width: parent.width - navHintSlot.width - todayButton.width
-            - fullButton.width - parent.spacing * 3
+          width: parent.width - navHintSlot.width - fullButton.width
+            - parent.spacing * 2
           anchors.verticalCenter: parent.verticalCenter
           text: root.selectedLabel
           textFormat: Text.PlainText
@@ -431,15 +429,6 @@ BarWidget {
             active: root.shortcutHintsActive && root.popupOpen
             showWash: false
           }
-        }
-
-        Button {
-          id: todayButton
-          text: "Today"
-          foreground: root.foreground
-          tooltipText: "Open today's note · T"
-          onClicked: root.openFull({ today: true })
-          KeyHint { sequences: ["T"] }
         }
 
         Button {

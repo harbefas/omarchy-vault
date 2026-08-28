@@ -73,7 +73,6 @@ Item {
     try { if (payloadJson) payload = JSON.parse(payloadJson) } catch (e) {}
     var targeted = payload.focus === "reader"
       || (typeof payload.path === "string" && payload.path !== "")
-      || payload.today === true
     if (service) {
       if (payload.settings && typeof payload.settings === "object")
         settings = payload.settings
@@ -86,7 +85,6 @@ Item {
 
     if (typeof payload.path === "string" && payload.path !== "")
       selectPath(payload.path)
-    else if (payload.today === true) openDailyNote()
     else if (currentPath === "" && notes.length > 0) selectPath(notes[0].path)
 
     Qt.callLater(function() {
@@ -230,10 +228,6 @@ Item {
     if (path !== "") { selectPath(path); return }
     status = "Note not found: " + name
     statusTimer.restart()
-  }
-
-  function openDailyNote() {
-    if (service) selectPath(service.dailyPath())
   }
 
   function noteIndex(path) {
@@ -439,15 +433,6 @@ Item {
 
   // ------------------------------------------------------------------- IPC
 
-  IpcHandler {
-    target: "harbefas.vault"
-
-    function today(): void {
-      if (root.shell && typeof root.shell.summon === "function")
-        root.shell.summon("harbefas.vault", JSON.stringify({ today: true }))
-    }
-  }
-
   // ------------------------------------------------------------------- view
 
   FloatingWindow {
@@ -520,9 +505,6 @@ Item {
             && (event.key === Qt.Key_Slash || text === "/")) {
           root.activateSearch()
           event.accepted = true
-        } else if (plain && !root.textInputFocused() && text === "t") {
-          root.openDailyNote()
-          event.accepted = true
         } else if (plain && !root.textInputFocused() && text === "e") {
           root.toggleEditing()
           event.accepted = true
@@ -575,7 +557,7 @@ Item {
 
           TextField {
             id: searchField
-            width: parent.width - todayButton.width - parent.spacing
+            width: parent.width
             foreground: root.foreground
             placeholderText: "Search vault…"
             onTextChanged: if (root.service) root.service.setQuery(text)
@@ -614,14 +596,6 @@ Item {
             }
           }
 
-          Button {
-            id: todayButton
-            text: "Today"
-            foreground: root.foreground
-            tooltipText: "Open today's note"
-            onClicked: root.openDailyNote()
-            KeyHint { sequences: ["T"] }
-          }
         }
 
         // ---- body: note list + reader/editor
