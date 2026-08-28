@@ -249,16 +249,26 @@ BarWidget {
     // Keep keyboard focus on a stable item. The list and search field can
     // change focus during navigation, but this catcher remains the popup's
     // fallback target whenever the surface opens.
-    Item {
+    PanelKeyCatcher {
       id: popupKeyCatcher
       anchors.fill: parent
-      focus: root.popupOpen
-      Keys.priority: Keys.BeforeItem
+      blocked: searchField.activeFocus
       onActiveFocusChanged: if (!activeFocus) root.heldModifierFlags = 0
-      Keys.onPressed: function(event) { root.handlePopupKey(event) }
-      Keys.onReleased: function(event) {
-        root.noteHeldModifiers(event, false)
-        if (root.isHintModifierKey(event.key)) event.accepted = true
+      onMoveRequested: function(dx, dy) {
+        if (dy !== 0) root.movePopupSelection(dy)
+      }
+      onActivateRequested: root.openSelected()
+      onCloseRequested: root.closePopup()
+      onTextKey: function(text) {
+        var key = String(text || "").toLowerCase()
+        if (key === "q") root.closePopup()
+        else if (key === "o") root.openSelected()
+        else if (key === "p") root.openFull({})
+        else if (key === "t") root.openFull({ today: true })
+        else if (key === "/") {
+          searchField.forceActiveFocus()
+          searchField.selectAll()
+        }
       }
     }
 
