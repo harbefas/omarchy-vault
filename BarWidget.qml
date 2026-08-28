@@ -10,6 +10,7 @@ BarWidget {
 
   readonly property var vault: bar && bar.shell
     ? bar.shell.serviceFor("harbefas.vault") : null
+  readonly property bool vaultConfigured: root.vault && root.vault.vaultConfigured
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color secondary: Util.alpha(foreground, 0.55)
   readonly property var popupNotes: vault ? vault.notes.slice(0, 12) : []
@@ -137,6 +138,20 @@ BarWidget {
     return "Suggested shortcut: Super+Alt+V\n" + service.suggestedBind
   }
 
+  function saveVaultPath(path) {
+    var value = String(path || "").trim()
+    if (!value || !root.vault) return
+    var entry = { id: root.moduleName }
+    for (var key in root.settings) if (key !== "id") entry[key] = root.settings[key]
+    entry.vaultPath = value
+    root.settings = entry
+    root.vault.applySettings(entry)
+    if (root.bar && root.bar.shell
+        && typeof root.bar.shell.updateEntryInline === "function")
+      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    root.vault.refresh()
+  }
+
   function noteLabel(note) {
     if (!note) return ""
     return note.folder ? note.folder + "/" + note.title : note.title
@@ -231,13 +246,20 @@ BarWidget {
     contentWidth: fittedContentWidth(Style.space(360))
     contentHeight: fittedContentHeight(contentColumn.implicitHeight)
 
-    Column {
+      Column {
       id: contentColumn
       anchors.fill: parent
-      spacing: Style.space(8)
+        spacing: Style.space(8)
+
+        VaultSetup {
+          width: parent.width
+          visible: !root.vaultConfigured
+          onSubmitted: root.saveVaultPath(path)
+        }
 
       TextField {
         id: searchField
+        visible: root.vaultConfigured
         width: parent.width
         foreground: root.foreground
         placeholderText: "Search vault…"
@@ -278,6 +300,7 @@ BarWidget {
 
       ListView {
         id: noteList
+        visible: root.vaultConfigured
         width: parent.width
         height: Math.min(Style.space(300), Math.max(Style.space(34), contentHeight))
         clip: true
@@ -318,7 +341,8 @@ BarWidget {
 
       Text {
         width: parent.width
-        visible: !root.vault || root.vault.notes.length === 0
+        visible: root.vaultConfigured
+          && (!root.vault || root.vault.notes.length === 0)
         text: root.vault && root.vault.searching ? "Searching…" : "No notes"
         color: root.secondary
         font.family: Style.font.family
@@ -328,7 +352,7 @@ BarWidget {
 
       Rectangle {
         width: parent.width
-        visible: root.showBindTip
+        visible: root.showBindTip && root.vaultConfigured
         height: visible ? bindTip.implicitHeight + Style.space(12) : 0
         color: Util.alpha(root.foreground, 0.08)
 
@@ -352,6 +376,7 @@ BarWidget {
       PanelSeparator { width: parent.width }
 
       Row {
+        visible: root.vaultConfigured
         width: parent.width
         spacing: Style.space(6)
 

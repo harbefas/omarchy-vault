@@ -24,7 +24,8 @@ Item {
     ? String(manifest.__sourceDir) : home + "/.config/omarchy/plugins/harbefas.vault"
   property string vaultPath: ""
   property int recentCount: 40
-  readonly property string resolvedVault: vaultPath !== "" ? vaultPath : home + "/amphora"
+  readonly property string resolvedVault: vaultPath.trim()
+  readonly property bool vaultConfigured: vaultPath.trim() !== ""
 
   // Every note in the vault, used to resolve wikilinks by title. Cheap to
   // hold: the listing already walked the whole tree.
@@ -79,6 +80,7 @@ Item {
   // ---------------------------------------------------------------- listing
 
   function refresh() {
+    if (!root.vaultConfigured) return
     if (!listProcess.running) listProcess.running = true
   }
 

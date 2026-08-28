@@ -14,6 +14,7 @@ Item {
   property var manifest: null
   property var service: null
   property bool opened: false
+  moduleName: "harbefas.vault"
 
   property string currentPath: ""
   property string currentTitle: ""
@@ -49,6 +50,7 @@ Item {
   readonly property bool largeNote: draft.length > largeNoteThreshold
 
   readonly property var notes: service ? service.notes : []
+  readonly property bool vaultConfigured: service && service.vaultConfigured
 
   // Frontmatter is lifted out of the prose and drawn as a header; wikilinks
   // become anchors so they can be followed. These are refreshed manually so a
@@ -409,6 +411,20 @@ Item {
     if (editing) Qt.callLater(function() { editor.forceActiveFocus() })
   }
 
+  function saveVaultPath(path) {
+    var value = String(path || "").trim()
+    if (!value || !root.service) return
+    var entry = { id: root.moduleName }
+    for (var key in root.settings) if (key !== "id") entry[key] = root.settings[key]
+    entry.vaultPath = value
+    root.settings = entry
+    root.service.applySettings(entry)
+    if (root.bar && root.bar.shell
+        && typeof root.bar.shell.updateEntryInline === "function")
+      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    root.service.refresh()
+  }
+
   function openExternal() {
     if (currentPath === "") return
     if (dirty) saveDraft()
@@ -526,6 +542,20 @@ Item {
       Keys.onReleased: function(event) {
         root.noteHeldModifiers(event, false)
         if (root.isHintModifierKey(event.key)) event.accepted = true
+      }
+
+      Rectangle {
+        anchors.fill: parent
+        color: Color.background
+        visible: !root.vaultConfigured
+        z: 20
+
+        VaultSetup {
+          anchors.centerIn: parent
+          width: Math.min(parent.width - Style.space(48), Style.space(620))
+          foreground: root.foreground
+          onSubmitted: root.saveVaultPath(path)
+        }
       }
 
       Column {
