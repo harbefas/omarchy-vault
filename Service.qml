@@ -48,7 +48,9 @@ Item {
   readonly property bool bindingsReady: root.bindingsScanned >= 2
 
   function noteBindings(text) {
-    if (String(text || "").indexOf("nfvelten.vault") >= 0)
+    // The full panel binding is independent; only the widget binding disables
+    // this widget-launcher suggestion.
+    if (String(text || "").indexOf("nfvelten.vault.widget") >= 0)
       root.keybindConfigured = true
     root.bindingsScanned += 1
   }
