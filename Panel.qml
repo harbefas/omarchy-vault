@@ -802,9 +802,19 @@ Item {
             }
 
             Text {
+              readonly property string readError:
+                root.service && root.service.error ? root.service.error : ""
+
               anchors.centerIn: parent
+              width: parent.width - Style.space(24)
+              horizontalAlignment: Text.AlignHCenter
+              wrapMode: Text.WordWrap
               visible: root.notes.length === 0
-              text: root.service && root.service.searching ? "Searching…" : "No notes"
+              // An empty vault and a vault that could not be read looked
+              // exactly alike before.
+              text: readError !== "" ? "Could not read the vault.\n" + readError
+                : (root.service && root.service.searching ? "Searching…" : "No notes")
+              textFormat: Text.PlainText
               color: root.secondary
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall

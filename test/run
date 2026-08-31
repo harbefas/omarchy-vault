@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Vault.js is Qt-free and bin/bounded-output is a plain script, so both can be
+# checked here rather than by opening the panel and looking.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+node test/vault-test.js "$PWD/Vault.js"
+./test/bin-test.sh

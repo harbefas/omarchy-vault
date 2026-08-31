@@ -122,6 +122,7 @@ Item {
       Math.max(1, Style.normalBorderWidth))
 
     Text {
+      textFormat: Text.PlainText
       id: keycapText
       anchors.centerIn: parent
       text: root.label

@@ -374,7 +374,9 @@ BarWidget {
         width: parent.width
         visible: root.vaultConfigured
           && (!root.vault || root.vault.notes.length === 0)
-        text: root.vault && root.vault.searching ? "Searching…" : "No notes"
+        text: root.vault && root.vault.error ? "Could not read the vault"
+          : (root.vault && root.vault.searching ? "Searching…" : "No notes")
+        textFormat: Text.PlainText
         color: root.secondary
         font.family: Style.font.family
         font.pixelSize: Style.font.bodySmall

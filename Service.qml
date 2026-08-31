@@ -46,6 +46,11 @@ Item {
   property bool searchAgain: false
   property bool searching: false
 
+  // A listing that failed is not an empty vault. Without this the panel drew
+  // "No notes" whether the vault was empty, the path had been renamed, or
+  // find was not installed at all.
+  property string error: ""
+
   // Offer an optional launcher shortcut without ever changing the user's
   // Hyprland configuration. The suggestion disappears once a matching bind
   // is found in either supported configuration format.
@@ -152,9 +157,24 @@ Item {
   Process {
     id: listProcess
     running: false
+    property string errorText: ""
+
     command: [root.pluginDir + "/bin/bounded-output", "find", root.resolvedVault,
       "-type", "f", "-name", "*.md",
       "-not", "-path", "*/.*", "-printf", "%T@\t%p\n"]
+
+    stderr: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: listProcess.errorText = String(text || "").trim()
+    }
+
+    // find reports an empty result with 0, so anything else is a fault: a
+    // vault path that is gone, or find missing from PATH.
+    onExited: function(exitCode) {
+      root.error = exitCode === 0 ? ""
+        : (listProcess.errorText || "listing the vault failed with " + exitCode)
+      listProcess.errorText = ""
+    }
 
     stdout: StdioCollector {
       waitForEnd: true
@@ -179,6 +199,8 @@ Item {
   Process {
     id: searchProcess
     running: false
+    property string errorText: ""
+
     command: [root.pluginDir + "/bin/bounded-output", "rg", "--files-with-matches",
       "--smart-case", "--fixed-strings",
       "--glob", "*.md", "--", root.searchTerm, root.resolvedVault]
@@ -193,8 +215,17 @@ Item {
         root.finishSearch(text)
       }
     }
+    stderr: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: searchProcess.errorText = String(text || "").trim()
+    }
+
     // rg exits 1 when nothing matched, which is an empty result, not a fault.
-    onExited: {
+    // 2 and above are, and so is 127 when rg is not installed.
+    onExited: function(exitCode) {
+      if (exitCode >= 2)
+        root.error = searchProcess.errorText || "search failed with " + exitCode
+      searchProcess.errorText = ""
       if (root.searching) root.finishSearch("")
       if (root.searchAgain) {
         root.searchAgain = false

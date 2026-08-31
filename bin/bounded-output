@@ -1,5 +1,17 @@
-#!/bin/sh
-set -eu
-
+#!/usr/bin/env bash
 # Keep untrusted command output bounded before Quickshell's collector sees it.
+#
+# The status of the wrapped command is what the caller needs, not head's. A
+# plain pipeline reports head's, so a missing rg, a vault path that no longer
+# exists and an empty vault all exited 0 and looked identical: the panel drew
+# "No notes" either way.
+#
+# SIGPIPE is not a failure here. Output past the limit is exactly what this
+# script is for, and head closing the pipe is how it stops.
+set -uo pipefail
+
 "$@" | /usr/bin/head -c 4194305
+status=${PIPESTATUS[0]}
+
+[ "$status" -eq 141 ] && exit 0
+exit "$status"
