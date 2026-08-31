@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Ui
 
 import "Vault.js" as Vault
+import "EditorMutations.js" as EditorMutations
 
 Item {
   id: root
@@ -87,7 +88,11 @@ Item {
       selectPath(payload.path)
     else if (currentPath === "" && notes.length > 0) selectPath(notes[0].path)
 
+    if (payload.action === "new") startCreate()
+    else if (payload.action === "daily") openDaily()
+
     Qt.callLater(function() {
+      if (payload.action === "new" || payload.action === "daily") return
       if (targeted) focusReader()
       else focusSearch()
     })
@@ -131,6 +136,8 @@ Item {
     if (dirty) saveDraft()
     currentPath = path
     currentTitle = Vault.noteTitle(path)
+    externalChanged = false
+    externalText = ""
     editing = false
     clearReader()
     noteFile.path = path
@@ -145,8 +152,18 @@ Item {
 
     onLoaded: {
       // A change on disk while editing would silently discard the draft, so an
-      // in-progress edit keeps what the user typed.
-      if (root.editing && root.dirty) return
+      // in-progress edit keeps what the user typed and the conflict is handed
+      // to them instead. The vault commits itself every minute, so this fires
+      // for real: another editor, a sync, a script.
+      if (root.editing && root.dirty) {
+        var onDisk = text()
+        if (onDisk !== root.draft) {
+          root.externalText = onDisk
+          root.externalChanged = true
+        }
+        return
+      }
+      root.externalChanged = false
       root.draft = text()
       if (root.editing) editor.text = root.draft
       root.dirty = false
@@ -161,8 +178,30 @@ Item {
     }
   }
 
+  property bool externalChanged: false
+  property string externalText: ""
+
+  function reloadExternal() {
+    externalChanged = false
+    draft = externalText
+    editor.text = draft
+    dirty = false
+    refreshReader(!editing)
+    status = "Reloaded from disk"
+    statusTimer.restart()
+  }
+
+  function keepDraft() {
+    externalChanged = false
+    externalText = ""
+    // The draft is still dirty, so the next save wins over the disk copy.
+    autosave.restart()
+  }
+
   function saveDraft() {
     if (!dirty || currentPath === "") return
+    // An unresolved conflict must not be overwritten by the autosave timer.
+    if (externalChanged) return
     noteFile.setText(draft)
     dirty = false
     status = "Saved"
@@ -368,7 +407,7 @@ Item {
   }
 
   function textInputFocused() {
-    return searchField.activeFocus || editor.activeFocus
+    return searchField.activeFocus || editor.activeFocus || newNoteField.activeFocus
   }
 
   function activateSearch() {
@@ -421,6 +460,63 @@ Item {
         && typeof root.bar.shell.updateEntryInline === "function")
       root.bar.shell.updateEntryInline(root.moduleName, entry)
     root.service.refresh()
+  }
+
+  // ------------------------------------------------------------ new notes
+
+  property bool creating: false
+  property string pendingCreate: ""
+
+  function startCreate() {
+    if (!vaultConfigured) return
+    creating = true
+  }
+
+  function cancelCreate() {
+    creating = false
+    focusList()
+  }
+
+  function submitCreate(name) {
+    var path = Vault.newNotePath(service ? service.resolvedVault : "", name)
+    if (path === "") return
+    creating = false
+    createNote(path, Vault.noteTemplate(Vault.noteTitle(path)))
+  }
+
+  function openDaily() {
+    if (!service || !vaultConfigured) return
+    createNote(service.dailyPath(), Vault.dailyTemplate(new Date()))
+  }
+
+  // A shell does the work so the parent folders come along, and an existing
+  // note is opened untouched instead of being overwritten by the template.
+  function createNote(path, template) {
+    if (path === "" || createProcess.running) return
+    pendingCreate = path
+    createProcess.command = ["sh", "-c",
+      'mkdir -p "$(dirname "$1")" && { [ -e "$1" ] || printf %s "$2" > "$1"; }',
+      "sh", path, template]
+    createProcess.running = true
+  }
+
+  Process {
+    id: createProcess
+    running: false
+
+    onExited: function(exitCode) {
+      var path = root.pendingCreate
+      root.pendingCreate = ""
+      if (exitCode !== 0 || path === "") {
+        root.status = "Could not create the note."
+        statusTimer.restart()
+        return
+      }
+      if (root.service) root.service.refresh()
+      root.selectPath(path)
+      root.editing = true
+      Qt.callLater(function() { editor.forceActiveFocus() })
+    }
   }
 
   function openExternal() {
@@ -483,7 +579,19 @@ Item {
         var plain = !ctrl && !shift && !alt
         var text = String(event.text || "").toLowerCase()
 
-        if (event.key === Qt.Key_S && ctrl) {
+        if (event.key === Qt.Key_N && ctrl) {
+          root.startCreate()
+          event.accepted = true
+        } else if (event.key === Qt.Key_D && ctrl) {
+          root.openDaily()
+          event.accepted = true
+        } else if (plain && !root.textInputFocused() && text === "n") {
+          root.startCreate()
+          event.accepted = true
+        } else if (plain && !root.textInputFocused() && text === "d") {
+          root.openDaily()
+          event.accepted = true
+        } else if (event.key === Qt.Key_S && ctrl) {
           root.saveDraft()
           event.accepted = true
         } else if (event.key === Qt.Key_E && ctrl) {
@@ -518,7 +626,8 @@ Item {
         } else if (root.navigateReader(event)) {
           event.accepted = true
         } else if (event.key === Qt.Key_Escape) {
-          if (root.editing) { root.saveDraft(); root.editing = false }
+          if (root.creating) root.cancelCreate()
+          else if (root.editing) { root.saveDraft(); root.editing = false }
           else if (searchField.activeFocus) root.focusList()
           else if (root.focusRegion === "reader") root.focusFirstNote()
           else root.requestClose()
@@ -717,13 +826,15 @@ Item {
                 id: noteHeader
                 width: parent.width
                 height: Math.max(titleBlock.implicitHeight, openFileButton.implicitHeight,
-                  hintButton.implicitHeight, modeButton.implicitHeight)
+                  hintButton.implicitHeight, modeButton.implicitHeight,
+                  newButton.implicitHeight, dailyButton.implicitHeight)
                 spacing: Style.space(8)
 
                 Column {
                   id: titleBlock
                   width: parent.width - openFileButton.width - hintButton.width
-                    - modeButton.width - parent.spacing * 3
+                    - modeButton.width - newButton.width - dailyButton.width
+                    - parent.spacing * 5
                   anchors.verticalCenter: parent.verticalCenter
                   spacing: Style.space(1)
 
@@ -748,6 +859,26 @@ Item {
                     font.pixelSize: Style.font.caption
                     elide: Text.ElideRight
                   }
+                }
+
+                Button {
+                  id: newButton
+                  text: "New"
+                  foreground: root.foreground
+                  enabled: root.vaultConfigured
+                  tooltipText: "Create a note · N or Ctrl+N"
+                  onClicked: root.startCreate()
+                  KeyHint { sequences: ["N", "Ctrl+N"] }
+                }
+
+                Button {
+                  id: dailyButton
+                  text: "Today"
+                  foreground: root.foreground
+                  enabled: root.vaultConfigured
+                  tooltipText: "Open today's daily note · D or Ctrl+D"
+                  onClicked: root.openDaily()
+                  KeyHint { sequences: ["D", "Ctrl+D"] }
                 }
 
                 Button {
@@ -782,6 +913,23 @@ Item {
                   onClicked: root.toggleEditing()
                   KeyHint { sequences: ["E", "Ctrl+E"] }
                 }
+              }
+
+              // Name prompt for a new note. A `/` in the name creates the
+              // folders, so `Pessoal/Ideias` works without leaving the panel.
+              TextField {
+                id: newNoteField
+                width: parent.width
+                visible: root.creating
+                placeholderText: "New note name — Folder/Name creates the folder"
+                foreground: root.foreground
+                onAccepted: root.submitCreate(text)
+                onVisibleChanged: {
+                  if (!visible) return
+                  text = ""
+                  Qt.callLater(function() { newNoteField.forceActiveFocus() })
+                }
+                Keys.onEscapePressed: root.cancelCreate()
               }
 
               // Frontmatter tags, drawn as chips instead of raw YAML.
@@ -829,6 +977,43 @@ Item {
                 font.pixelSize: Style.font.caption
               }
 
+              // The note changed on disk under an unsaved draft. Autosave is
+              // held until this is answered, so neither copy is lost.
+              Row {
+                id: conflictRow
+                width: parent.width
+                visible: root.externalChanged
+                spacing: Style.space(8)
+
+                Text {
+                  width: parent.width - reloadButton.width - keepButton.width
+                    - parent.spacing * 2
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: "This note changed on disk. Reloading discards your unsaved edits."
+                  textFormat: Text.PlainText
+                  wrapMode: Text.Wrap
+                  color: root.foreground
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                }
+
+                Button {
+                  id: keepButton
+                  text: "Keep mine"
+                  foreground: root.foreground
+                  tooltipText: "Discard the version on disk on the next save"
+                  onClicked: root.keepDraft()
+                }
+
+                Button {
+                  id: reloadButton
+                  text: "Reload"
+                  foreground: root.foreground
+                  tooltipText: "Replace the draft with the version on disk"
+                  onClicked: root.reloadExternal()
+                }
+              }
+
               // Keep the reader's Flickable explicit. This makes the content
               // height and keyboard scrolling reliable for very large notes.
               Item {
@@ -837,6 +1022,8 @@ Item {
                 height: parent.height - noteHeader.height - Style.space(1)
                   - (root.noteTags.length > 0 ? tagRow.implicitHeight + parent.spacing : 0)
                   - (root.largeNote ? oversizedNotice.implicitHeight + parent.spacing : 0)
+                  - (root.creating ? newNoteField.implicitHeight + parent.spacing : 0)
+                  - (root.externalChanged ? conflictRow.implicitHeight + parent.spacing : 0)
                   - parent.spacing * 3
 
                 Flickable {
@@ -990,6 +1177,41 @@ Item {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
                     background: null
+
+                    // Wraps the selection, or drops the markers around an
+                    // empty caret and leaves it between them.
+                    function wrapSelection(before, after) {
+                      var start = Math.min(selectionStart, selectionEnd)
+                      var end = Math.max(selectionStart, selectionEnd)
+                      var selected = text.slice(start, end)
+                      EditorMutations.replaceRange(editor, start, end,
+                        before + selected + after,
+                        before.length, before.length + selected.length)
+                    }
+
+                    // `[label](url)` with the half the user still has to fill
+                    // in left selected.
+                    function insertLink() {
+                      var start = Math.min(selectionStart, selectionEnd)
+                      var end = Math.max(selectionStart, selectionEnd)
+                      var label = text.slice(start, end) || "link text"
+                      var markdown = "[" + label + "](https://)"
+                      if (start === end)
+                        EditorMutations.replaceRange(editor, start, end, markdown,
+                          1, 1 + label.length)
+                      else
+                        EditorMutations.replaceRange(editor, start, end, markdown,
+                          label.length + 3, markdown.length - 1)
+                    }
+
+                    function insertWikilink() {
+                      var start = Math.min(selectionStart, selectionEnd)
+                      var end = Math.max(selectionStart, selectionEnd)
+                      var name = text.slice(start, end)
+                      EditorMutations.replaceRange(editor, start, end,
+                        "[[" + name + "]]", 2, 2 + name.length)
+                    }
+
                     Keys.priority: Keys.BeforeItem
               Keys.onPressed: function(event) {
                 root.noteHeldModifiers(event, true)
@@ -1011,6 +1233,18 @@ Item {
                       } else if (event.key === Qt.Key_E && ctrl) {
                         root.toggleEditing()
                         event.accepted = true
+                      } else if (event.key === Qt.Key_B && ctrl) {
+                        editor.wrapSelection("**", "**")
+                        event.accepted = true
+                      } else if (event.key === Qt.Key_I && ctrl) {
+                        editor.wrapSelection("*", "*")
+                        event.accepted = true
+                      } else if (event.key === Qt.Key_K && ctrl) {
+                        editor.insertLink()
+                        event.accepted = true
+                      } else if (event.key === Qt.Key_L && ctrl) {
+                        editor.insertWikilink()
+                        event.accepted = true
                       } else if (event.key === Qt.Key_Tab && !shift) {
                         root.focusList()
                         event.accepted = true
@@ -1021,7 +1255,8 @@ Item {
                       if (root.isHintModifierKey(event.key)) event.accepted = true
                     }
                     KeyHint {
-                      sequences: ["Esc", "Ctrl+S", "Ctrl+E"]
+                      sequences: ["Esc", "Ctrl+S", "Ctrl+E", "Ctrl+B", "Ctrl+I",
+                        "Ctrl+K", "Ctrl+L"]
                       active: root.shortcutHintsActive && root.editing
                       showWash: false
                     }

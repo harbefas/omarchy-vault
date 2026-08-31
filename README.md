@@ -48,7 +48,16 @@ omarchy restart shell
 - Press `/` to search.
 - Press `Enter` to open the selected note in the full panel.
 - Press `e` to edit the current note and `Esc` to return to reading.
+- Press `n` (or `Ctrl+N`) to create a note. A name like `Pessoal/Ideias`
+  creates the folder along with the file.
+- Press `d` (or `Ctrl+D`) to open today's daily note, creating it from the
+  vault's section template when it does not exist yet.
+- While editing, `Ctrl+B`, `Ctrl+I`, `Ctrl+K`, and `Ctrl+L` insert bold,
+  italic, a Markdown link, and a `[[wikilink]]`.
 - Press `q` or `Esc` to leave the current surface.
+
+If the open note changes on disk while an edit is unsaved, autosave stops and
+the panel offers `Reload` or `Keep mine` instead of picking a side.
 
 Markdown content is rendered in the reader. Edits are written directly to the
 selected file only after the explicit save action.
@@ -74,3 +83,6 @@ Full Markdown panel:
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+`EditorMutations.js` comes from [Omawrite](https://github.com/omacom/omawrite),
+also MIT licensed.

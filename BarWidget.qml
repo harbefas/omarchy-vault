@@ -188,6 +188,8 @@ BarWidget {
     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter
         || (plain && text === "o")) openSelected()
     else if (plain && text === "p") openFull({})
+    else if (plain && text === "n") openFull({ action: "new" })
+    else if (plain && text === "d") openFull({ action: "daily" })
     else if (plain && (text === "/" || event.key === Qt.Key_Slash)) {
       searchField.forceActiveFocus()
       searchField.selectAll()
@@ -266,6 +268,8 @@ BarWidget {
         if (key === "q") root.closePopup()
         else if (key === "o") root.openSelected()
         else if (key === "p") root.openFull({})
+        else if (key === "n") root.openFull({ action: "new" })
+        else if (key === "d") root.openFull({ action: "daily" })
         else if (key === "/") {
           searchField.forceActiveFocus()
           searchField.selectAll()
@@ -409,7 +413,7 @@ BarWidget {
 
         Text {
           width: parent.width - navHintSlot.width - fullButton.width
-            - parent.spacing * 2
+            - newNoteButton.width - dailyNoteButton.width - parent.spacing * 4
           anchors.verticalCenter: parent.verticalCenter
           text: root.selectedLabel
           textFormat: Text.PlainText
@@ -429,6 +433,24 @@ BarWidget {
             active: root.shortcutHintsActive && root.popupOpen
             showWash: false
           }
+        }
+
+        Button {
+          id: newNoteButton
+          text: "New"
+          foreground: root.foreground
+          tooltipText: "Create a note in the full panel · N"
+          onClicked: root.openFull({ action: "new" })
+          KeyHint { sequences: ["N"] }
+        }
+
+        Button {
+          id: dailyNoteButton
+          text: "Today"
+          foreground: root.foreground
+          tooltipText: "Open today's daily note · D"
+          onClicked: root.openFull({ action: "daily" })
+          KeyHint { sequences: ["D"] }
         }
 
         Button {

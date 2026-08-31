@@ -450,3 +450,40 @@ function resolveNote(name, notes) {
   }
   return fallback
 }
+
+// ------------------------------------------------------------- new notes
+
+// A typed name becomes a path inside the vault. Slashes are kept so
+// `Pessoal/Ideias` creates the folder, but the components are cleaned of the
+// characters that make a file awkward to open from a shell.
+function newNotePath(vaultPath, name) {
+  var raw = String(name || "").trim().replace(/\.md$/i, "")
+  var parts = []
+  var chunks = raw.split("/")
+  for (var i = 0; i < chunks.length; i++) {
+    var part = chunks[i].trim()
+      .replace(/[\\:*?"<>|]/g, "")
+      .replace(/\s+/g, " ")
+    if (part !== "" && part !== "." && part !== "..") parts.push(part)
+  }
+  if (parts.length === 0) return ""
+  return String(vaultPath || "").trim().replace(/\/+$/, "") + "/" + parts.join("/") + ".md"
+}
+
+function noteTemplate(title) {
+  return "# " + String(title || "") + "\n\n"
+}
+
+// Mirrors the section headings the vault's own daily notes use, so a day
+// created here looks like one created by the Obsidian template.
+function dailyTemplate(date) {
+  var d = date || new Date()
+  var stamp = pad2(d.getDate()) + "-" + pad2(d.getMonth() + 1) + "-" + d.getFullYear()
+  return "# " + stamp + "\n\n"
+    + "### Main Focus\n\n"
+    + "### Tasks: #personal\n\n"
+    + "### Tasks: #work\n\n"
+    + "### Quick Notes\n\n"
+    + "### Day Highlight\n\n"
+    + "### Incomplete tasks\n\n"
+}
